@@ -1,0 +1,10 @@
+// Referencia: https://sequelize.org/docs/v6/other-topics/migrations/#the-sequelizerc-file
+
+const path = require('path');
+
+module.exports = {
+  'config': path.resolve('./api/config', 'database.json'),
+  'models-path': path.resolve('db', './api/models'),
+  'seeders-path': path.resolve('db', './api/seeders'),
+  'migrations-path': path.resolve('db', './api/migrations')
+};
