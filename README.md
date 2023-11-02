@@ -1,2 +1,2 @@
-# api_ressuprimento-hardware
- Repositório do projeto de TCC do curso de ciência da computação da PUC-Rio, orientado pelo professor Edmundo Torreao. Um projeto de api de ressuprimento de produtos de hardware
+# api-ressuprimento-hardware
+ Repositório de código para o desenvolvimento do projeto de TCC da PUC-RIO, orientado pelo professor Edmundo Torreao. O projeto de api para ressuprimento de produtos de hardware.
