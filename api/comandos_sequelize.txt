@@ -1,0 +1,25 @@
+DEPOSITO:
+npx sequelize-cli model:create --name Deposito --attributes endereco:string
+
+PRODUTOS:
+npx sequelize-cli model:create --name Produtos --attributes sku:string,ean:string,nome:string,descricao:string,tipo_produto:enum,peso:double,preco_venda:double,preco_compra:double,quantidade:integer,estoque_seguranca:integer,giro:integer,inativo:boolean,sazonal:boolean,reposicao:boolean,excluido:boolean
+
+FORNECEDOR:
+npx sequelize-cli model:create --name Fornecedor --attributes registro_fornecedor:string,nome:string
+
+PAIS:
+npx sequelize-cli model:create --name Pais --attributes nome:string
+
+ALFANDEGA:
+npx sequelize-cli model:create --name Alfandega --attributes nome:string,endereco:string (?)
+
+ALFANDEGA_INTERNACIONAL:
+npx sequelize-cli model:create --name Alfandega_Internacional --attributes pais:string,cidade:string (?)
+npx sequelize-cli model:create --name Alfandega_Internacional --attributes nome:string,endereco:string,pais:string,cidade:string
+
+ALFANDEGA_NACIONAL:
+npx sequelize-cli model:create --name Alfandega_Nacional --attributes estado:string (?)
+npx sequelize-cli model:create --name Alfandega_Nacional --attributes nome:string,endereco:string,estado:string
+
+TRANSPORTADORA_INTERNACIONAL:
+npx sequelize-cli model:create --name Transportadora_Internacional --attributes documento:string,nome:string
