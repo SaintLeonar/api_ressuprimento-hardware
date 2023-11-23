@@ -13,11 +13,14 @@ module.exports = (sequelize, DataTypes) => {
       Transportadora_Internacional.belongsToMany(models.Alfandega_Internacional, { through: 'Transportadora_Alfandega_Internacional' })
       Transportadora_Internacional.belongsToMany(models.Alfandega_Nacional, { through: 'Transportadora_Alfandega_Nacional' })
       Transportadora_Internacional.belongsTo(models.Pais, { foreignKey: 'Pais_Id' } )
+      // hasMany Pedido_Ressuprimento
     }
   }
   Transportadora_Internacional.init({
     documento: DataTypes.STRING,
-    nome: DataTypes.STRING
+    nome: DataTypes.STRING,
+    moeda: DataTypes.ENUM,
+    modal_transporte: DataTypes.ENUM
   }, {
     sequelize,
     modelName: 'Transportadora_Internacional',

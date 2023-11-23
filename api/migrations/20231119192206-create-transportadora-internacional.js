@@ -20,6 +20,16 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'Pais', key: 'id' }
       },
+      moeda: {
+        type: Sequelize.ENUM,
+        values: ['Dólar Americano', 'Euro', 'Iene Japonês', 'Libra Esterlina', 'Yuan Chinês', 'Dólar Canadense', 'Dólar Australiano', 'Real'],
+        defaultValue: 'Real'
+      },
+      modal_transporte: {
+        type: Sequelize.ENUM,
+        values: ['Aéreo', 'Marítimo', 'Terrestre'],
+        defaultValue: 'Aéreo'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
