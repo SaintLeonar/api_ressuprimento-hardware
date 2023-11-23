@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Alfandega_Internacional.belongsToMany(models.Transportadora_Internacional, { through: 'Transportadora_Alfandega_Internacional' })
+      // hasMany Pedido_Ressuprimento
     }
   }
   Alfandega_Internacional.init({
