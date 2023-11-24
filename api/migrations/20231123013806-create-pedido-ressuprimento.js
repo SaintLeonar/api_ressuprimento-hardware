@@ -41,12 +41,12 @@ module.exports = {
         type: Sequelize.DATE
       },
       transportadora_internacional_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
         references: { model: 'Transportadora_Internacional', key: 'id' }
       },
       alfandega_internacional_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
         references: { model: 'Alfandega_Internacional', key: 'id' }
       },
@@ -57,7 +57,7 @@ module.exports = {
         type: Sequelize.DATE
       },
       alfandega_nacional_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
         references: { model: 'Alfandega_Nacional', key: 'id' }
       },

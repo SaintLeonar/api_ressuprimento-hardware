@@ -24,3 +24,15 @@ npx sequelize-cli model:create --name Transportadora_Local --attributes cnpj:str
 
 PEDIDO_RESSUPRIMENTO:
 npx sequelize-cli model:create --name Pedido_Ressuprimento --attributes frete_internacional:double,frete_local:double,data_pedido:date,aceito:boolean,data_aceitacao:date,previsao_chegada:date,data_despacho:date,chegada_alfandega_int:date,liberacao_alfandega_int:date,chegada_alfandega_nac:date,liberacao_alfandega_nac:date,data_chegada:date,origem_ressuprimento:enum,status_pedido_ressuprimento:enum
+
+ITEM_PEDIDO_RESSUPRIMENTO:
+npx sequelize-cli model:create --name Item_Pedido_Fornecedor  --attributes quantidade_pedida:integer,preco_acordado:double
+
+NOTA_FISCAL:
+npx sequelize-cli model:create --name Nota_Fiscal --attributes identificador:string,data_emissao:date,data_recebimento:date
+
+ITEM_NOTA_FISCAL:
+npx sequelize-cli model:create --name Item_Nota_Fiscal --attributes quantidade_nf:integer,preco_nf:double
+
+PAGAMENTO_RESSUPRIMENTO:
+npx sequelize-cli model:create --name Pagamento_Ressuprimento --attributes data_pagamento:date,data_vencimento:date,multa:double,tipo_pagamento_ressuprimento:enum,status_pagamento:enum

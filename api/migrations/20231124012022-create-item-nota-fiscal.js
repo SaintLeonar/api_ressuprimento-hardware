@@ -2,23 +2,28 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Transportadora_Local', {
+    await queryInterface.createTable('Item_Nota_Fiscal', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      cnpj: {
-        type: Sequelize.STRING
-      },
-      nome: {
-        type: Sequelize.STRING
-      },
-      alfandega_nacional_id: {
+      nota_fiscal_id: {
         allowNull: false,
         type: Sequelize.INTEGER,
-        references: { model: 'Alfandega_Nacional', key: 'id' }
+        references: { model: 'Nota_Fiscal', key: 'id' }
+      },
+      item_pedido_fornecedor_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Item_Pedido_Fornecedor', key: 'id' }
+      },
+      quantidade_nf: {
+        type: Sequelize.INTEGER
+      },
+      preco_nf: {
+        type: Sequelize.DOUBLE
       },
       createdAt: {
         allowNull: false,
@@ -31,6 +36,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Transportadora_Local');
+    await queryInterface.dropTable('Item_Nota_Fiscal');
   }
 };

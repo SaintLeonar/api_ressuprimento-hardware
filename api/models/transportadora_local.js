@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Transportadora_Local.belongsTo(models.Alfandega_Nacional, {
-        foreignKey: 'Transportadora_Local_Id'
+        foreignKey: 'Alfandega_Nacional_Id'
       })
       
       Transportadora_Local.hasMany(models.Pedido_Ressuprimento, {

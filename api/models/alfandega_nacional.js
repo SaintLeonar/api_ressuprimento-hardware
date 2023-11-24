@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
       })
 
       Alfandega_Nacional.hasMany(models.Transportadora_Local, {
-          foreignKey: 'Transportadora_Local_Id'
+          foreignKey: 'alfandega_nacional_id'
       })
       Alfandega_Nacional.hasMany(models.Pedido_Ressuprimento, {
         foreignKey: 'alfandega_nacional_id'

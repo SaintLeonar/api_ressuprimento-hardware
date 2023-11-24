@@ -28,6 +28,17 @@ module.exports = (sequelize, DataTypes) => {
       Pedido_Ressuprimento.belongsTo(models.Depositos, {
         foreignKey: 'deposito_id'
       })
+
+      Pedido_Ressuprimento.hasMany(models.Item_Pedido_Ressuprimento, {
+        foreignKey: 'pedido_ressuprimento_id'
+      })
+
+      Pedido_Ressuprimento.hasOne(models.Nota_Fiscal, {
+        foreignKey: 'pedido_ressuprimento_id'
+      })
+      Pedido_Ressuprimento.hasOne(models.Pagamento_Ressuprimento, {
+        foreignKey: 'pedido_ressuprimento_id'
+      })
     }
   }
   Pedido_Ressuprimento.init({
