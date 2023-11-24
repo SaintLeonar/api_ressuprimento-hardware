@@ -10,12 +10,16 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Alfandega_Nacional.belongsToMany(models.Transportadora_Internacional, { through: 'Transportadora_Alfandega_Nacional' })
+      Alfandega_Nacional.belongsToMany(models.Transportadora_Internacional, { 
+        through: 'Transportadora_Alfandega_Nacional' 
+      })
+
       Alfandega_Nacional.hasMany(models.Transportadora_Local, {
           foreignKey: 'Transportadora_Local_Id'
-        }
-      )
-      // hasMany Pedido_Ressuprimento
+      })
+      Alfandega_Nacional.hasMany(models.Pedido_Ressuprimento, {
+        foreignKey: 'alfandega_nacional_id'
+      })
     }
   }
   Alfandega_Nacional.init({

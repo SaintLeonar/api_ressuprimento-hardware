@@ -2,12 +2,22 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Pedido_Ressuprimentos', {
+    await queryInterface.createTable('Pedido_Ressuprimento', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
+      },
+      deposito_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Depositos', key: 'id' }
+      },
+      fornecedor_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Fornecedores', key: 'id' }
       },
       frete_internacional: {
         type: Sequelize.DOUBLE
@@ -30,17 +40,37 @@ module.exports = {
       data_despacho: {
         type: Sequelize.DATE
       },
+      transportadora_internacional_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Transportadora_Internacional', key: 'id' }
+      },
+      alfandega_internacional_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Alfandega_Internacional', key: 'id' }
+      },
       chegada_alfandega_int: {
         type: Sequelize.DATE
       },
       liberacao_alfandega_int: {
         type: Sequelize.DATE
       },
+      alfandega_nacional_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Alfandega_Nacional', key: 'id' }
+      },
       chegada_alfandega_nac: {
         type: Sequelize.DATE
       },
       liberacao_alfandega_nac: {
         type: Sequelize.DATE
+      },
+      transportadora_local_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Transportadora_Local', key: 'id' }
       },
       data_chegada: {
         type: Sequelize.DATE
@@ -66,6 +96,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Pedido_Ressuprimentos');
+    await queryInterface.dropTable('Pedido_Ressuprimento');
   }
 };

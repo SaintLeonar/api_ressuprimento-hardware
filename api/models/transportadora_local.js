@@ -13,7 +13,10 @@ module.exports = (sequelize, DataTypes) => {
       Transportadora_Local.belongsTo(models.Alfandega_Nacional, {
         foreignKey: 'Transportadora_Local_Id'
       })
-      // hasMany PedidoRessuprimento
+      
+      Transportadora_Local.hasMany(models.Pedido_Ressuprimento, {
+        foreignKey: 'transportadora_local_id'
+      })
     }
   }
   Transportadora_Local.init({
