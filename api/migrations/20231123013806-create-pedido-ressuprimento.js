@@ -68,7 +68,7 @@ module.exports = {
         type: Sequelize.DATE
       },
       transportadora_local_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
         references: { model: 'Transportadora_Local', key: 'id' }
       },

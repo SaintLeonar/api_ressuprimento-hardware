@@ -19,8 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     data_pagamento: DataTypes.DATE,
     data_vencimento: DataTypes.DATE,
     multa: DataTypes.DOUBLE,
-    tipo_pagamento_ressuprimento: DataTypes.ENUM,
-    status_pagamento: DataTypes.ENUM
+    tipo_pagamento_ressuprimento: DataTypes.ENUM('Boleto', 'Transferência Bancária', 'Cartão de Crédito'),
+    status_pagamento: DataTypes.ENUM('Aguardando', 'Realizado')
   }, {
     sequelize,
     modelName: 'Pagamento_Ressuprimento',

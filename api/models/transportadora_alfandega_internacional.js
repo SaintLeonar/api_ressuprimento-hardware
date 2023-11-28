@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  Produtos.init({
+  Transportadora_Alfandega_Internacional.init({
     transportadora_internacional_id: {
       type: DataTypes.INTEGER,
       allowNull: false,

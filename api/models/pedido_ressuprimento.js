@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Pedido_Ressuprimento.belongsTo(models.Fornecedores, {
+      // BELONGS TO
+      Pedido_Ressuprimento.belongsTo(models.Fornecedor, {
         foreignKey: 'fornecedor_id'
       })
       Pedido_Ressuprimento.belongsTo(models.Transportadora_Internacional, {
@@ -25,14 +26,16 @@ module.exports = (sequelize, DataTypes) => {
       Pedido_Ressuprimento.belongsTo(models.Alfandega_Nacional, {
         foreignKey: 'alfandega_nacional_id'
       })
-      Pedido_Ressuprimento.belongsTo(models.Depositos, {
+      Pedido_Ressuprimento.belongsTo(models.Deposito, {
         foreignKey: 'deposito_id'
       })
-
-      Pedido_Ressuprimento.hasMany(models.Item_Pedido_Ressuprimento, {
+      
+      // HAS MANY
+      Pedido_Ressuprimento.hasMany(models.Item_Pedido_Fornecedor, {
         foreignKey: 'pedido_ressuprimento_id'
       })
 
+      // HAS ONE
       Pedido_Ressuprimento.hasOne(models.Nota_Fiscal, {
         foreignKey: 'pedido_ressuprimento_id'
       })
@@ -54,11 +57,20 @@ module.exports = (sequelize, DataTypes) => {
     chegada_alfandega_nac: DataTypes.DATE,
     liberacao_alfandega_nac: DataTypes.DATE,
     data_chegada: DataTypes.DATE,
-    origem_ressuprimento: DataTypes.ENUM,
-    status_pedido_ressuprimento: DataTypes.ENUM
+    origem_ressuprimento: DataTypes.ENUM('Nacional', 'Internacional'),
+    status_pedido_ressuprimento: DataTypes.ENUM('Em preparação', 
+                                                'Despachado para alfandega internacional', 
+                                                'Chegada em alfandega internacional', 
+                                                'Liberado pela alfandega internacional', 
+                                                'Chegada em alfandega nacional', 
+                                                'Liberado pela alfandega nacional',
+                                                'Em rota de entrega',
+                                                'Pedido entregue', 
+                                                'Não aceito')
   }, {
     sequelize,
     modelName: 'Pedido_Ressuprimento',
+    freezeTableName: true
   });
   return Pedido_Ressuprimento;
 };

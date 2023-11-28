@@ -29,8 +29,8 @@ module.exports = (sequelize, DataTypes) => {
   Transportadora_Internacional.init({
     documento: DataTypes.STRING,
     nome: DataTypes.STRING,
-    moeda: DataTypes.ENUM,
-    modal_transporte: DataTypes.ENUM
+    moeda: DataTypes.ENUM('Dólar Americano', 'Euro', 'Iene Japonês', 'Libra Esterlina', 'Yuan Chinês', 'Dólar Canadense', 'Dólar Australiano', 'Real'),
+    modal_transporte: DataTypes.ENUM('Aéreo', 'Marítimo', 'Terrestre')
   }, {
     sequelize,
     modelName: 'Transportadora_Internacional',
