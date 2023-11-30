@@ -7,6 +7,7 @@ class ProdutoServices extends Services {
     }
 
     async buscaProduto(pEan) {
+        console.log(database[this.nomeDoModelo])
         return database[this.nomeDoModelo].findOne({
             where: {
                 ean: String(pEan)
