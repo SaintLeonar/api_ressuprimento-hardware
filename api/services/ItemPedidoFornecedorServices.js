@@ -29,6 +29,14 @@ class ItemPedidoFornecedorServices extends Services {
             }
         )
     }
+
+    async buscaProdutosPedidoRessuprimento(pPedidoRessuprimentoId) {
+        return database[this.nomeDoModelo].findAll({
+            where: {
+                pedido_ressuprimento_id: Number(pPedidoRessuprimentoId)
+            }
+        })
+    }
 }
 
 module.exports = ItemPedidoFornecedorServices

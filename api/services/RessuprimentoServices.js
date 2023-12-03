@@ -99,10 +99,18 @@ class RessuprimentoServices extends Services {
     }
 
     async realizaPagamento(pId, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao) {
+        const pedido = await this.buscaUmRegistro(pId)
+        if(!pedido) {
+            throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
+        }
 
         const resultado = await this.pagamento.realizaPagamentoRessuprimento(pId, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao)
 
         return resultado.multaTotal
+    }
+
+    async buscaProdutosPedido(pId) {
+        return await this.itemPedidoFornecedor.buscaProdutosPedidoRessuprimento(pId)
     }
 }
 

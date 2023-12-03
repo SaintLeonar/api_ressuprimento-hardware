@@ -1,7 +1,7 @@
 const Services = require('./Services')
 const database = require('../models')
 const Erro = require('../errors/Erros')
-const { addBusinessDays, parse, isValid, isBefore, format, startOfDay, differenceInDays } = require('date-fns');
+const { addBusinessDays, parse, isValid, isBefore, startOfDay, differenceInDays } = require('date-fns');
 
 class PagamentoRessuprimentoServices extends Services {
     constructor() {
