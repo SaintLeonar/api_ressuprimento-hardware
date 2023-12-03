@@ -25,7 +25,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Transportadora_Local',
-    freezeTableName: true
+    freezeTableName: true,
+    tableName: 'Transportadora_Local'
   });
   return Transportadora_Local;
 };

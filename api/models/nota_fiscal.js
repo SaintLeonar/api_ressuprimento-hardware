@@ -26,6 +26,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Nota_Fiscal',
+    freezeTableName: true,
+    tableName: 'Nota_Fiscal'
   });
   return Nota_Fiscal;
 };

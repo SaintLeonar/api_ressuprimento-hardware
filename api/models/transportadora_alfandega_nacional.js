@@ -33,7 +33,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Transportadora_Alfandega_Nacional',
-    freezeTableName: true
+    freezeTableName: true,
+    tableName: 'Transportadora_Alfandega_Nacional'
   });
   return Transportadora_Alfandega_Nacional;
 };
