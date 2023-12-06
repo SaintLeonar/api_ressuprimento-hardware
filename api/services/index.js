@@ -6,6 +6,10 @@ const DepositoServices = require('./DepositoServices')
 const PagamentoRessuprimentoServices = require('./PagamentoRessuprimentoServices')
 const NotaFiscalServices = require('./NotaFiscalServices')
 const ItemNotaFiscalServices = require('./ItemNotaFiscalServices')
+const AlfandegaInternacionalServices = require('./AlfandegaInternacionalServices')
+const AlfandegaNacionalServices = require('./AlfandegaNacionalServices')
+const TransportadoraInternacionalServices = require('./TransportadoraInternacionalServices')
+const TransportadoraLocalServices = require('./TransportadoraLocalServices')
 
 module.exports = {
     ProdutoServices: ProdutoServices,
@@ -15,5 +19,9 @@ module.exports = {
     DepositoServices: DepositoServices,
     PagamentoRessuprimentoServices: PagamentoRessuprimentoServices,
     NotaFiscalServices: NotaFiscalServices,
-    ItemNotaFiscalServices: ItemNotaFiscalServices
+    ItemNotaFiscalServices: ItemNotaFiscalServices,
+    AlfandegaInternacionalServices: AlfandegaInternacionalServices,
+    AlfandegaNacionalServices: AlfandegaNacionalServices,
+    TransportadoraInternacionalServices: TransportadoraInternacionalServices,
+    TransportadoraLocalServices: TransportadoraLocalServices
 }

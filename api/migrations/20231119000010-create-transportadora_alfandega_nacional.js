@@ -4,25 +4,21 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('Transportadora_Alfandega_Nacional', {
-      transportadora_internacional_id: {
-        type: Sequelize.INTEGER,
+      id: {
         allowNull: false,
-        references: {
-          model: 'Transportadora_Internacional',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER
       },
-      alfandega_internacional_id: {
-        type: Sequelize.INTEGER,
+      transportadora_internacional_id: {
         allowNull: false,
-        references: {
-          model: 'Alfandega_Nacional',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        type: Sequelize.INTEGER,
+        references: { model: 'Transportadora_Internacional', key: 'id' }
+      },
+      alfandega_nacional_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: { model: 'Alfandega_Nacional', key: 'id' }
       }
     });
   },

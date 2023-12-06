@@ -1,11 +1,16 @@
 const Services = require('./Services')
 const database = require('../models')
 const Erro = require('../errors/Erros')
+const { parse, isValid } = require('date-fns');
 const ProdutoServices = require('./ProdutoServices')
 const ItemPedidoFornecedorServices = require('./ItemPedidoFornecedorServices')
 const FornecedorServices = require('./FornecedorServices')
 const DepositoServices = require('./DepositoServices')
 const PagamentoRessuprimentoServices = require('./PagamentoRessuprimentoServices')
+const TransportadoraInternacionalServices = require('./TransportadoraInternacionalServices')
+const TransportadoraNacionalServices = require('./TransportadoraLocalServices')
+const AlfandegaInternacionalServices = require('./AlfandegaInternacionalServices')
+const AlfandegaNacionalServices = require('./AlfandegaNacionalServices')
 
 class RessuprimentoServices extends Services {
     constructor() {
@@ -15,8 +20,13 @@ class RessuprimentoServices extends Services {
         this.fornecedor = new FornecedorServices()
         this.deposito = new DepositoServices()
         this.pagamento = new PagamentoRessuprimentoServices()
+        this.transportadoraInternacional = new TransportadoraInternacionalServices()
+        this.transportadoraNacional = new TransportadoraNacionalServices()
+        this.alfandegaInternacional = new AlfandegaInternacionalServices()
+        this.alfandegaNacional = new AlfandegaNacionalServices()
     }
 
+    // TESTADO
     async criaNovoPedidoRessuprimento(pFornecedorId, pDepositoId, pProdutos, pTransacao) {
 
         const fornecedor = await this.fornecedor.buscaUmRegistro(pFornecedorId)
@@ -67,6 +77,18 @@ class RessuprimentoServices extends Services {
             throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
         }
 
+        if(pedido.status_pedido_ressuprimento !== 'Criado') {
+            throw new Erro(400, 'Status do pedido é diferente de: Criado')
+        }
+
+        if(pedido.aceito !== null && pedido.aceito) {
+            throw new Erro(400, 'O pedido de ressuprimento já encontra-se aceito')
+        }
+
+        if(pedido.aceito !== null && !pedido.aceito) {
+            throw new Erro(400, 'O pedido de ressuprimento já encontra-se recusado')
+        }
+
         let dados = {}
 
         if(pAceito) {
@@ -104,13 +126,100 @@ class RessuprimentoServices extends Services {
             throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
         }
 
+        // Esse caso não estava descrito
+        if(pedido.status_pedido_ressuprimento !== 'Criado') {
+            throw new Erro(400, 'Status do pedido é diferente de: Criado')
+        }
+
+        // Esse caso não estava descrito
+        if(pedido.aceito !== true) {
+            throw new Erro(404, 'Pedido de Ressuprimento não foi aceito pelo fornecedor')
+        }
+
         const resultado = await this.pagamento.realizaPagamentoRessuprimento(pId, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao)
+
+        let dados = {
+            status_pedido_ressuprimento: 'Em preparação'
+        }
+
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
 
         return resultado.multaTotal
     }
 
     async buscaProdutosPedido(pId) {
         return await this.itemPedidoFornecedor.buscaProdutosPedidoRessuprimento(pId)
+    }
+
+    async despachaPedidoInternacional(pId, pDataDespacho, pAlfandegaId, pTransportadoraInternacionalId, pFreteInternacional, pPrevisaoChegada, pTransacao) {
+        const pedido = await this.buscaUmRegistro(pId)
+        if(!pedido) {
+            throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
+        }
+
+        // Esse caso não estava descrito
+        if(pedido.status_pedido_ressuprimento !== 'Em preparação') {
+            throw new Erro(400, 'Status do pedido é diferente de: Em preparação')
+        }
+
+        const dataDespacho = parse(pDataDespacho, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataDespacho)) {
+            throw new Erro(400, 'Data inválida de despacho')
+        }
+
+        let previsaoChegada = null
+        // Se estiver preenchido testa a formatação da data
+        if(pPrevisaoChegada !== undefined) {
+            previsaoChegada = parse(pPrevisaoChegada, 'dd/MM/yyyy', new Date())
+            if(!isValid(previsaoChegada)) {
+                throw new Erro(400, 'Data inválida de previsão de chegada')
+            }
+        }
+
+        const alfandegaInternacional = await this.alfandegaInternacional.buscaUmRegistro(pAlfandegaId)
+        if(!alfandegaInternacional) {
+            throw new Erro(404, 'Alfândega não cadastrada na base de dados')
+        }
+
+        const transportadoraInternacional = await this.transportadoraInternacional.buscaUmRegistro(pTransportadoraInternacionalId)
+        if(!transportadoraInternacional) {
+            throw new Erro(404, 'Transportadora internacional não cadastrada na base de dados')
+        }
+
+        if(pFreteInternacional < 0.0 || typeof pFreteInternacional !== 'number') {
+            throw new Erro(400, 'Frete internacional inválido. Valor do frete deve ser numérico e maior ou igual a 0')
+        }
+
+        const entrega = await this.transportadoraInternacional.entregaAlfandegaInternacional(transportadoraInternacional.id, alfandegaInternacional.id)
+        if(!entrega) {
+            throw new Erro(400, `A transportadora ${transportadoraInternacional.nome} não realiza transporte para a alfandega ${alfandegaInternacional.nome}`)
+        }
+
+        let dados = {
+            data_despacho: dataDespacho,
+            alfandega_internacional_id: alfandegaInternacional.id,
+            transportadora_internacional_id: transportadoraInternacional.id,
+            frete_internacional: pFreteInternacional,
+            previsao_chegada: previsaoChegada,
+            origem_ressuprimento: 'Internacional',
+            status_pedido_ressuprimento: 'Despachado para alfandega internacional',
+        }
+
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
+
+        return pedidoAtualizado
     }
 }
 

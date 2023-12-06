@@ -10,31 +10,21 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Transportadora_Alfandega_Internacional.belongsTo(models.Transportadora_Internacional, {
+        foreignKey: 'transportadora_internacional_id'
+      })
+      Transportadora_Alfandega_Internacional.belongsTo(models.Alfandega_Internacional, {
+        foreignKey: 'alfandega_internacional_id'
+      })
     }
   }
-  Transportadora_Alfandega_Internacional.init({
-    transportadora_internacional_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Transportadora_Internacional', // Nome da tabela de Transportadora Internacional
-        key: 'id', // Nome da chave primária na tabela de Transportadora Internacional
-      },
-    },
-    alfandega_internacional_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Alfandega_Internacional', // Nome da tabela de Alfandega Internacional
-        key: 'id', // Nome da chave primária na tabela de Alfandega Internacional
-      },
-    }
-  }, {
+  Transportadora_Alfandega_Internacional.init({}, 
+  {
     sequelize,
     modelName: 'Transportadora_Alfandega_Internacional',
     freezeTableName: true,
-    tableName: 'Transportadora_Alfandega_Internacional'
+    tableName: 'Transportadora_Alfandega_Internacional',
+    timestamps: false
   });
   return Transportadora_Alfandega_Internacional;
 };

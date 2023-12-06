@@ -19,6 +19,23 @@ class NotaFiscalServices extends Services {
             throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
         }
 
+        // Esse caso não estava descrito
+        // Se o estado for 'Em preparação' significa que o pedido foi pago
+        // Então decidi não validar se existe um pagamento para esse pedido
+        if(pedido.status_pedido_ressuprimento !== 'Em preparação') {
+            throw new Erro(400, 'Status do pedido é diferente de: Em preparação')
+        }
+
+        // Esse caso não estava descrito
+        const notaFiscal = await database[this.nomeDoModelo].findOne({
+            where: {
+                pedido_ressuprimento_id: Number(pedido.id)
+            }
+        })
+        if(notaFiscal) {
+            throw new Erro(400, 'Nota fiscal já emitida para esse pedido')
+        }
+
         const dataEmissao = parse(pDataEmissao, 'dd/MM/yyyy', new Date())
         if(!isValid(dataEmissao)) {
             throw new Erro(400, 'Data inválida de emissão')

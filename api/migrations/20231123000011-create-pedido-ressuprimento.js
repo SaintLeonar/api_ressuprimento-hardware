@@ -81,9 +81,10 @@ module.exports = {
       },
       status_pedido_ressuprimento: {
         type: Sequelize.ENUM,
-        values: ['Em preparação', 'Despachado para alfandega internacional', 'Chegada em alfandega internacional', 
+        values: ['Criado', 'Em preparação', 'Despachado para alfandega internacional', 'Chegada em alfandega internacional', 
           'Liberado pela alfandega internacional', 'Chegada em alfandega nacional', 'Liberado pela alfandega nacional',
-          'Em rota de entrega', 'Pedido entregue', 'Não aceito']
+          'Em rota de entrega', 'Pedido entregue', 'Não aceito'],
+          defaultValue: 'Criado'
       },
       createdAt: {
         allowNull: false,
