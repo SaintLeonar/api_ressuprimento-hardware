@@ -8,7 +8,7 @@ const FornecedorServices = require('./FornecedorServices')
 const DepositoServices = require('./DepositoServices')
 const PagamentoRessuprimentoServices = require('./PagamentoRessuprimentoServices')
 const TransportadoraInternacionalServices = require('./TransportadoraInternacionalServices')
-const TransportadoraNacionalServices = require('./TransportadoraLocalServices')
+const TransportadoraLocalServices = require('./TransportadoraLocalServices')
 const AlfandegaInternacionalServices = require('./AlfandegaInternacionalServices')
 const AlfandegaNacionalServices = require('./AlfandegaNacionalServices')
 
@@ -21,12 +21,11 @@ class RessuprimentoServices extends Services {
         this.deposito = new DepositoServices()
         this.pagamento = new PagamentoRessuprimentoServices()
         this.transportadoraInternacional = new TransportadoraInternacionalServices()
-        this.transportadoraNacional = new TransportadoraNacionalServices()
+        this.transportadoraLocal = new TransportadoraLocalServices()
         this.alfandegaInternacional = new AlfandegaInternacionalServices()
         this.alfandegaNacional = new AlfandegaNacionalServices()
     }
 
-    // TESTADO
     async criaNovoPedidoRessuprimento(pFornecedorId, pDepositoId, pProdutos, pTransacao) {
 
         const fornecedor = await this.fornecedor.buscaUmRegistro(pFornecedorId)
@@ -49,6 +48,9 @@ class RessuprimentoServices extends Services {
         )
 
         // Caberia aqui testar se a lista de produtos está vazia.
+        if(!pProdutos) {
+            throw new Erro(404, 'Lista de produtos está vazia')
+        }
 
         // ITERA SOBRE OS PRODUTOS
         for(const produtoInfo of pProdutos) {
@@ -184,7 +186,7 @@ class RessuprimentoServices extends Services {
 
         const alfandegaInternacional = await this.alfandegaInternacional.buscaUmRegistro(pAlfandegaId)
         if(!alfandegaInternacional) {
-            throw new Erro(404, 'Alfândega não cadastrada na base de dados')
+            throw new Erro(404, 'Alfândega internacional não cadastrada na base de dados')
         }
 
         const transportadoraInternacional = await this.transportadoraInternacional.buscaUmRegistro(pTransportadoraInternacionalId)
@@ -211,6 +213,269 @@ class RessuprimentoServices extends Services {
             status_pedido_ressuprimento: 'Despachado para alfandega internacional',
         }
 
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
+
+        return pedidoAtualizado
+    }
+
+    async despachaPedidoNacional(pId, pDataDespacho, pTransportadoraLocalId, pFreteLocal, pPrevisaoChegada, pTransacao) {
+        const pedido = await this.buscaUmRegistro(pId)
+        if(!pedido) {
+            throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
+        }
+
+        // Esse caso não estava descrito
+        if(pedido.status_pedido_ressuprimento !== 'Em preparação') {
+            throw new Erro(400, 'Status do pedido é diferente de: Em preparação')
+        }
+
+        const dataDespacho = parse(pDataDespacho, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataDespacho)) {
+            throw new Erro(400, 'Data inválida de despacho')
+        }
+
+        const transportadoraLocal = await this.transportadoraLocal.buscaUmRegistro(pTransportadoraLocalId)
+        if(!transportadoraLocal) {
+            throw new Erro(404, 'Transportadora local não cadastrada na base de dados')
+        }
+
+        if(pFreteLocal < 0.0 || typeof pFreteLocal !== 'number') {
+            throw new Erro(400, 'Frete local inválido. Valor do frete deve ser numérico e maior ou igual a 0')
+        }
+
+        let previsaoChegada = null
+        // Se estiver preenchido testa a formatação da data, isso garante que o preenchimento da data de previsão de chegada seja um parâmetro opcional
+        if(pPrevisaoChegada !== undefined) {
+            previsaoChegada = parse(pPrevisaoChegada, 'dd/MM/yyyy', new Date())
+            if(!isValid(previsaoChegada)) {
+                throw new Erro(400, 'Data inválida de previsão de chegada')
+            }
+        }
+        
+        let dados = {
+            data_despacho: dataDespacho,
+            transportadora_local_id: transportadoraLocal.id,
+            frete_local: pFreteLocal,
+            previsao_chegada: previsaoChegada,
+            origem_ressuprimento: 'Nacional',
+            status_pedido_ressuprimento: 'Despachado para transportadora local',
+        }
+
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
+
+        return pedidoAtualizado
+    }
+
+    async chegadaAlfandega(pPedido, pDataChegada, pAlfandega, pTransacao) {
+
+        const dataChegada = parse(pDataChegada, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataChegada)) {
+            if(pAlfandega === 'internacional') {
+                throw new Erro(400, 'Data de chegada em alfandega internacional inválida')
+            } else if (pAlfandega === 'nacional') {
+                throw new Erro(400, 'Data de chegada em alfandega nacional inválida')
+            }
+        }
+
+        let dados = {}
+
+        if(pAlfandega === 'internacional') {
+            if(pPedido.status_pedido_ressuprimento !== 'Despachado para alfândega internacional') {
+                throw new Erro(400, 'Status do pedido é diferente de: Despachado para alfândega internacional')
+            }
+
+            dados = {
+                chegada_alfandega_internacional: dataChegada,
+                status_pedido_ressuprimento: 'Chegada em alfândega internacional'
+            }
+
+        } else if (pAlfandega === 'nacional') {
+            if(pPedido.status_pedido_ressuprimento !== 'Liberado pela alfândega internacional') {
+                throw new Erro(400, 'Status do pedido é diferente de: Liberado pela alfândega internacional')
+            }
+
+            dados= {
+                chegada_alfandega_nacional: dataChegada,
+                status_pedido_ressuprimento: 'Chegada em alfândega nacional'
+            }
+        }
+
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pPedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
+
+        return pedidoAtualizado
+    }
+
+    async liberacaoAlfandega(pPedido, pDataLiberacao, pAlfandegaNacionalId, pTransacao) {
+
+        const isAlfandegaInternacional = (pAlfandegaNacionalId) ? true : false
+
+        const dataLiberacao = parse(pDataLiberacao, 'dd/MM/yyyy', new Date())
+
+        let dados = {}
+
+        if(isAlfandegaInternacional) {
+            if(!isValid(dataLiberacao)) {
+                throw new Erro(400, 'Data de liberacao por alfandega internacional inválida')
+            }
+
+            const alfandegaNacional = this.alfandegaNacional.buscaUmRegistro(pAlfandegaNacionalId)
+            if(!alfandegaNacional) {
+                throw new Erro(404, 'Alfândega nacional não cadastrada na base de dados')
+            }
+
+            dados = {
+                alfandega_nacional_id: alfandegaNacional.id,
+                liberacao_alfandega_int: pDataLiberacao,
+                status_pedido_ressuprimento: 'Liberada pela alfândega internacional'
+            }
+
+        } else {
+            if(!isValid(dataLiberacao)) {
+                throw new Erro(400, 'Data de liberacao por alfandega nacional inválida')
+            }
+
+            dados = {
+                liberacao_alfandega_nac: pDataLiberacao,
+                status_pedido_ressuprimento: 'Liberada pela alfândega nacional'
+            }
+        }
+
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pPedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
+    }
+
+    async entregaPedidoInternacional(pPedido, pDataSaidaNacional, pFreteLocal, pTransportadoraLocalId, pPrevisaoChegada, pTransacao) {
+        // Esse caso não estava descrito
+        if(pPedido.status_pedido_ressuprimento !== 'Liberado pela alfândega nacional') {
+            throw new Erro(400, 'Status do pedido é diferente de: Liberado pela alfândega nacional')
+        }
+
+        const dataSaidaNacional = parse(pDataSaidaNacional, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataSaidaNacional)) {
+            throw new Erro(400, 'Data de saída inválida')
+        }
+
+        const transportadoraLocal = await this.transportadoraLocal.buscaUmRegistro(pTransportadoraLocalId)
+        if(!transportadoraLocal) {
+            throw new Erro(404, 'Transportadora local não cadastrada na base de dados')
+        }
+
+        if(pFreteLocal < 0.0 || typeof pFreteLocal !== 'number') {
+            throw new Erro(400, 'Frete local inválido. Valor do frete deve ser numérico e maior ou igual a 0')
+        }
+
+        let previsaoChegada = null
+        // Se estiver preenchido testa a formatação da data, isso garante que o preenchimento da data de previsão de chegada seja um parâmetro opcional
+        if(pPrevisaoChegada !== undefined) {
+            previsaoChegada = parse(pPrevisaoChegada, 'dd/MM/yyyy', new Date())
+            if(!isValid(previsaoChegada)) {
+                throw new Erro(400, 'Data inválida de previsão de chegada')
+            }
+        }
+
+        let dados = {
+            saida_nacional: dataSaidaNacional,
+            transportadora_local_id: transportadoraLocal.id,
+            frete_local: pFreteLocal,
+            previsao_chegada: previsaoChegada,
+            status_pedido_ressuprimento: 'Em rota de entrega',
+        }
+
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pPedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
+
+        return pedidoAtualizado
+    }
+
+    async entregaPedidoNacional (pPedido, pDataSaidaNacional, pTransacao) {
+        // Esse caso não estava descrito
+        if(pPedido.status_pedido_ressuprimento !== 'Despachado para transportadora local') {
+            throw new Erro(400, 'Status do pedido é diferente de: Despachado para transportadora local')
+        }
+
+        const dataSaidaNacional = parse(pDataSaidaNacional, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataSaidaNacional)) {
+            throw new Erro(400, 'Data de saída inválida')
+        }
+
+        let dados = {
+            saida_nacional: dataSaidaNacional,
+            status_pedido_ressuprimento: 'Em rota de entrega'
+        }
+
+        const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
+            { 
+                where: { id: Number(pPedido.id) },
+                individualHooks: true,
+                transaction: pTransacao
+            }
+        )
+
+        return pedidoAtualizado
+    }
+
+    async recebeProdutos (pId, pDataChegada, pTransacao) {
+        const pedido = await this.buscaUmRegistro(pId)
+        if(!pedido) {
+            throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
+        }
+
+        if(pedido.status_pedido_ressuprimento !== 'Em rota de entrega') {
+            throw new Erro(400, 'Status do pedido é diferente de: Em rota de entrega')
+        }
+
+        const dataChegada = parse(pDataChegada, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataChegada)) {
+            throw new Erro(400, 'Data inválida de chegada')
+        }
+
+        const produtosPedido = await this.itemPedidoFornecedor.buscaProdutosPedidoRessuprimento(pedido.id)
+
+        for(const produtoPedido of produtosPedido) {
+            const { produto_id, quantidade_pedida, preco_acordado } = produtoPedido;
+
+            const produto = await this.produtos.buscaUmRegistro(produto_id)
+            if(!produto) {
+                throw new Erro(404, 'Produto não encontrado')
+            }
+
+            // Atualiza registro do produto no deposito
+            await this.produtos.recebeProdutos(produto, quantidade_pedida, preco_acordado, pTransacao)
+        }
+
+        let dados = {
+            data_chegada: dataChegada,
+            status_pedido_ressuprimento: 'Pedido entregue'
+        }
+    
         const pedidoAtualizado = await database[this.nomeDoModelo].update(dados,
             { 
                 where: { id: Number(pedido.id) },

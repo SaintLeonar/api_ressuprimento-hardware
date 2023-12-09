@@ -83,7 +83,7 @@ module.exports = {
         type: Sequelize.ENUM,
         values: ['Criado', 'Em preparação', 'Despachado para alfandega internacional', 'Chegada em alfandega internacional', 
           'Liberado pela alfandega internacional', 'Chegada em alfandega nacional', 'Liberado pela alfandega nacional',
-          'Em rota de entrega', 'Pedido entregue', 'Não aceito'],
+          'Despachado para transportadora local', 'Em rota de entrega', 'Pedido entregue', 'Não aceito'],
           defaultValue: 'Criado'
       },
       createdAt: {

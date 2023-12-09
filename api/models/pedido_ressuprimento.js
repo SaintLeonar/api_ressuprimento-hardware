@@ -65,6 +65,7 @@ module.exports = (sequelize, DataTypes) => {
                                                 'Liberado pela alfandega internacional', 
                                                 'Chegada em alfandega nacional', 
                                                 'Liberado pela alfandega nacional',
+                                                'Despachado para transportadora local',
                                                 'Em rota de entrega',
                                                 'Pedido entregue', 
                                                 'Não aceito')

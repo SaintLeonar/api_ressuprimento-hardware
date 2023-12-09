@@ -7,10 +7,9 @@ class NotaFiscalController {
     
     /**
      * 
-     *  Implementação do Caso de Uso UC11 - Emissão Nota Fiscal
+     *  Implementação do Caso de Uso UC11 - Emissão Nota Fiscal (Internacional e Nacional)
      * 
      *  Possível refatoramento: Verificar se já existe pagamento para esse pedido.
-     *                          Verificar se nota já foi emitida anteriormente.
      * 
      */
     static async emiteNotaFiscal(req, res) {
