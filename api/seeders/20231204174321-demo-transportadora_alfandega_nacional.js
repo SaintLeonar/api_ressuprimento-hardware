@@ -15,11 +15,7 @@ module.exports = {
       {
         transportadora_internacional_id: 2,
         alfandega_nacional_id: 1
-      },
-      {
-        transportadora_internacional_id: 2,
-        alfandega_nacional_id: 2
-      },
+      }
     ], {});
   },
 

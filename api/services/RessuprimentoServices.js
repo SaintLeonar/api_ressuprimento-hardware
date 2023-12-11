@@ -280,6 +280,10 @@ class RessuprimentoServices extends Services {
 
     async chegadaAlfandega(pPedido, pDataChegada, pAlfandega, pTransacao) {
 
+        if(pDataChegada === undefined) {
+            throw new Erro (400, 'Parâmetro de data com erro de escrita')
+        }
+
         const dataChegada = parse(pDataChegada, 'dd/MM/yyyy', new Date())
         if(!isValid(dataChegada)) {
             if(pAlfandega === 'internacional') {
@@ -292,23 +296,23 @@ class RessuprimentoServices extends Services {
         let dados = {}
 
         if(pAlfandega === 'internacional') {
-            if(pPedido.status_pedido_ressuprimento !== 'Despachado para alfândega internacional') {
-                throw new Erro(400, 'Status do pedido é diferente de: Despachado para alfândega internacional')
+            if(pPedido.status_pedido_ressuprimento !== 'Despachado para alfandega internacional') {
+                throw new Erro(400, 'Status do pedido é diferente de: Despachado para alfandega internacional')
             }
 
             dados = {
-                chegada_alfandega_internacional: dataChegada,
-                status_pedido_ressuprimento: 'Chegada em alfândega internacional'
+                chegada_alfandega_int: dataChegada,
+                status_pedido_ressuprimento: 'Chegada em alfandega internacional'
             }
 
         } else if (pAlfandega === 'nacional') {
-            if(pPedido.status_pedido_ressuprimento !== 'Liberado pela alfândega internacional') {
-                throw new Erro(400, 'Status do pedido é diferente de: Liberado pela alfândega internacional')
+            if(pPedido.status_pedido_ressuprimento !== 'Liberado pela alfandega internacional') {
+                throw new Erro(400, 'Status do pedido é diferente de: Liberado pela alfandega internacional')
             }
 
             dados= {
-                chegada_alfandega_nacional: dataChegada,
-                status_pedido_ressuprimento: 'Chegada em alfândega nacional'
+                chegada_alfandega_nac: dataChegada,
+                status_pedido_ressuprimento: 'Chegada em alfandega nacional'
             }
         }
 
@@ -325,6 +329,10 @@ class RessuprimentoServices extends Services {
 
     async liberacaoAlfandega(pPedido, pDataLiberacao, pAlfandegaNacionalId, pTransacao) {
 
+        if(pDataLiberacao === undefined) {
+            throw new Erro(400, 'Parâmetro de data com erro de escrita')
+        }
+
         const isAlfandegaInternacional = (pAlfandegaNacionalId) ? true : false
 
         const dataLiberacao = parse(pDataLiberacao, 'dd/MM/yyyy', new Date())
@@ -336,15 +344,20 @@ class RessuprimentoServices extends Services {
                 throw new Erro(400, 'Data de liberacao por alfandega internacional inválida')
             }
 
-            const alfandegaNacional = this.alfandegaNacional.buscaUmRegistro(pAlfandegaNacionalId)
+            const alfandegaNacional = await this.alfandegaNacional.buscaUmRegistro(pAlfandegaNacionalId)
             if(!alfandegaNacional) {
                 throw new Erro(404, 'Alfândega nacional não cadastrada na base de dados')
             }
 
+            const entrega = await this.transportadoraInternacional.entregaAlfandegaNacional(pPedido.transportadora_internacional_id, alfandegaNacional.id)
+            if(!entrega) {
+                throw new Erro(400, `A transportadora não realiza transporte para a alfandega ${alfandegaNacional.nome}`)
+            }
+
             dados = {
                 alfandega_nacional_id: alfandegaNacional.id,
-                liberacao_alfandega_int: pDataLiberacao,
-                status_pedido_ressuprimento: 'Liberada pela alfândega internacional'
+                liberacao_alfandega_int: dataLiberacao,
+                status_pedido_ressuprimento: 'Liberado pela alfandega internacional'
             }
 
         } else {
@@ -353,8 +366,8 @@ class RessuprimentoServices extends Services {
             }
 
             dados = {
-                liberacao_alfandega_nac: pDataLiberacao,
-                status_pedido_ressuprimento: 'Liberada pela alfândega nacional'
+                liberacao_alfandega_nac: dataLiberacao,
+                status_pedido_ressuprimento: 'Liberado pela alfandega nacional'
             }
         }
 
@@ -369,13 +382,17 @@ class RessuprimentoServices extends Services {
 
     async entregaPedidoInternacional(pPedido, pDataSaidaNacional, pFreteLocal, pTransportadoraLocalId, pPrevisaoChegada, pTransacao) {
         // Esse caso não estava descrito
-        if(pPedido.status_pedido_ressuprimento !== 'Liberado pela alfândega nacional') {
+        if(pPedido.status_pedido_ressuprimento !== 'Liberado pela alfandega nacional') {
             throw new Erro(400, 'Status do pedido é diferente de: Liberado pela alfândega nacional')
         }
 
         const dataSaidaNacional = parse(pDataSaidaNacional, 'dd/MM/yyyy', new Date())
         if(!isValid(dataSaidaNacional)) {
             throw new Erro(400, 'Data de saída inválida')
+        }
+
+        if(!pTransportadoraLocalId) {
+            throw new Erro(400, 'Transportadora Local não preenchida')
         }
 
         const transportadoraLocal = await this.transportadoraLocal.buscaUmRegistro(pTransportadoraLocalId)

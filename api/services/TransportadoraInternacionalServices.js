@@ -48,6 +48,27 @@ class TransportadoraInternacionalServices extends Services {
 
         return false
     }
+
+    /**
+     * 
+     * @param {*} pTransportadoraInternacionalId 
+     * @param {*} pAlfandegaNacionalId 
+     * @returns true se entregar e false se não entregar
+     */
+    async entregaAlfandegaNacional (pTransportadoraInternacionalId, pAlfandegaNacionalId) {
+        const resposta = await database.Transportadora_Alfandega_Nacional.findOne({
+            where: {
+                transportadora_internacional_id: Number(pTransportadoraInternacionalId),
+                alfandega_nacional_id: Number(pAlfandegaNacionalId)
+            }
+        })
+
+        if(resposta) {
+            return true
+        }
+
+        return false
+    }
 }
 
 module.exports = TransportadoraInternacionalServices

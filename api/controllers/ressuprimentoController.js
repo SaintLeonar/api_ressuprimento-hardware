@@ -26,7 +26,7 @@ class RessuprimentoController {
             return res.status(200).json(pedido)
         } catch (erro) {
             console.log(`erro: ${erro}`)
-            return res.status(500).json(erro)
+            return res.status(erro.statusCode || 500).json({ error: erro.message } || 'Erro interno do servidor')
         }
     }
 
@@ -169,33 +169,33 @@ class RessuprimentoController {
      *  Implementação do Caso de Uso UC13 - Despacho do Pedido de Ressuprimento (Nacional)
      * 
      */
-        static async despachoNacional(req, res) {
-            let trans = await sequelize.transaction()
-            const { id } = req.params
-            try {
-                const contentType = req.headers['content-type']
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Erro(415, 'O content-type da requisição deve ser application/json')
-                }
-    
-                const { data_despacho, transportadora_local_id, frete_local, previsao_chegada } = req.body
-    
-                // Chamada Serviço Despacho Nacional
-                const pedidoAtualizado = await ressuprimentoServices.despachaPedidoNacional(id, data_despacho, transportadora_local_id, frete_local, previsao_chegada)
-    
-                const mensagem = `Pedido ${id} despachado para para transportadora local`
-    
-                await trans.commit()
-                return res.status(200).json({
-                    message: mensagem
-                })
-            } catch (erro) {
-                if(trans) { 
-                    await trans.rollback()
-                }
-                return res.status(erro.statusCode || 500).json({ error: erro.message } || 'Erro interno do servidor')
+    static async despachoNacional(req, res) {
+        let trans = await sequelize.transaction()
+        const { id } = req.params
+        try {
+            const contentType = req.headers['content-type']
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Erro(415, 'O content-type da requisição deve ser application/json')
             }
+
+            const { data_despacho, transportadora_local_id, frete_local, previsao_chegada } = req.body
+
+            // Chamada Serviço Despacho Nacional
+            const pedidoAtualizado = await ressuprimentoServices.despachaPedidoNacional(id, data_despacho, transportadora_local_id, frete_local, previsao_chegada)
+
+            const mensagem = `Pedido ${id} despachado para para transportadora local`
+
+            await trans.commit()
+            return res.status(200).json({
+                message: mensagem
+            })
+        } catch (erro) {
+            if(trans) { 
+                await trans.rollback()
+            }
+            return res.status(erro.statusCode || 500).json({ error: erro.message } || 'Erro interno do servidor')
         }
+    }
 
     /**
      * 
@@ -216,10 +216,10 @@ class RessuprimentoController {
                 throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
             }
 
-            if(pedido.status_pedido_ressuprimento === 'Despachado para alfândega internacional') {
+            if(pedido.status_pedido_ressuprimento === 'Despachado para alfandega internacional') {
                 const { chegada_alfandega_internacional } = req.body
                 const pedido_atualizado = await ressuprimentoServices.chegadaAlfandega(pedido, chegada_alfandega_internacional, 'internacional', trans)
-            } else if (pedido.status_pedido_ressuprimento === 'Liberado pela alfândega internacional') {
+            } else if (pedido.status_pedido_ressuprimento === 'Liberado pela alfandega internacional') {
                 const { chegada_alfandega_nacional } = req.body
                 const pedido_atualizado = await ressuprimentoServices.chegadaAlfandega(pedido, chegada_alfandega_nacional, 'nacional', trans)
             } else {
@@ -255,12 +255,12 @@ class RessuprimentoController {
                 throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
             }
 
-            if(pedido.status_pedido_ressuprimento === 'Chegada em alfândega internacional') {
-                const { alfandega_nacional_id, liberacao_alfandega_int } = req.body
-                const pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_int, alfandega_nacional_id, trans)
-            } else if (pedido.status_pedido_ressuprimento === 'Liberado pela alfândega internacional') {
-                const { liberacao_alfandega_nac } = req.body
-                const pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_nac, null, trans)
+            if(pedido.status_pedido_ressuprimento === 'Chegada em alfandega internacional') {
+                const { alfandega_nacional_id, liberacao_alfandega_internacional } = req.body
+                const pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_internacional, alfandega_nacional_id, trans)
+            } else if (pedido.status_pedido_ressuprimento === 'Chegada em alfandega nacional') {
+                const { liberacao_alfandega_nacional } = req.body
+                const pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_nacional, null, trans)
             } else {
                 throw new Erro(400, 'status_pedido_ressuprimento com problema de escrita')
             }

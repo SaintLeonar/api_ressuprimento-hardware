@@ -72,6 +72,9 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'Transportadora_Local', key: 'id' }
       },
+      saida_nacional: {
+        type: Sequelize.DATE
+      },
       data_chegada: {
         type: Sequelize.DATE
       },

@@ -56,6 +56,7 @@ module.exports = (sequelize, DataTypes) => {
     liberacao_alfandega_int: DataTypes.DATE,
     chegada_alfandega_nac: DataTypes.DATE,
     liberacao_alfandega_nac: DataTypes.DATE,
+    saida_nacional: DataTypes.DATE,
     data_chegada: DataTypes.DATE,
     origem_ressuprimento: DataTypes.ENUM('Nacional', 'Internacional'),
     status_pedido_ressuprimento: DataTypes.ENUM('Criado',
