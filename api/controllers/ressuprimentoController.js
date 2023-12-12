@@ -216,18 +216,25 @@ class RessuprimentoController {
                 throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
             }
 
+            let pedidoAtualizado = null
+            let mensagem = ''
+
             if(pedido.status_pedido_ressuprimento === 'Despachado para alfandega internacional') {
                 const { chegada_alfandega_internacional } = req.body
-                const pedido_atualizado = await ressuprimentoServices.chegadaAlfandega(pedido, chegada_alfandega_internacional, 'internacional', trans)
+                pedidoAtualizado = await ressuprimentoServices.chegadaAlfandega(pedido, chegada_alfandega_internacional, 'internacional', trans)
+                mensagem = `Pedido ${pedido.id} chegou na alfandega internacional`
             } else if (pedido.status_pedido_ressuprimento === 'Liberado pela alfandega internacional') {
                 const { chegada_alfandega_nacional } = req.body
-                const pedido_atualizado = await ressuprimentoServices.chegadaAlfandega(pedido, chegada_alfandega_nacional, 'nacional', trans)
+                pedidoAtualizado = await ressuprimentoServices.chegadaAlfandega(pedido, chegada_alfandega_nacional, 'nacional', trans)
+                mensagem = `Pedido ${pedido.id} chegou na alfandega nacional`
             } else {
                 throw new Erro(400, 'status_pedido_ressuprimento com problema de escrita')
             }
 
             await trans.commit()
-            return res.status(204).json({})
+            return res.status(200).json({
+                mensage: mensagem
+            })
         } catch (erro) {
             if(trans) { 
                 await trans.rollback()
@@ -255,18 +262,25 @@ class RessuprimentoController {
                 throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
             }
 
+            let pedidoAtualizado = null
+            let mensagem = ''
+
             if(pedido.status_pedido_ressuprimento === 'Chegada em alfandega internacional') {
                 const { alfandega_nacional_id, liberacao_alfandega_internacional } = req.body
-                const pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_internacional, alfandega_nacional_id, trans)
+                pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_internacional, alfandega_nacional_id, trans)
+                mensagem = `Pedido ${pedido.id} liberado pela alfandega internacional`
             } else if (pedido.status_pedido_ressuprimento === 'Chegada em alfandega nacional') {
                 const { liberacao_alfandega_nacional } = req.body
-                const pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_nacional, null, trans)
+                pedidoAtualizado = await ressuprimentoServices.liberacaoAlfandega(pedido, liberacao_alfandega_nacional, null, trans)
+                mensagem = `Pedido ${pedido.id} liberado pela alfandega nacional`
             } else {
                 throw new Erro(400, 'status_pedido_ressuprimento com problema de escrita')
             }
 
             await trans.commit()
-            return res.status(204).json({})
+            return res.status(200).json({
+                mensagem: mensagem
+            })
         } catch (erro) {
             if(trans) { 
                 await trans.rollback()
@@ -294,18 +308,22 @@ class RessuprimentoController {
                 throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
             }
 
+            let pedidoAtualizado = null
+
             if(pedido.origem_ressuprimento === 'Internacional') {
                 const { saida_nacional, frete_local, transportadora_local_id , previsao_chegada } = req.body
-                const pedidoAtualizado = await ressuprimentoServices.entregaPedidoInternacional(pedido, saida_nacional, frete_local, transportadora_local_id, previsao_chegada, trans)
+                pedidoAtualizado = await ressuprimentoServices.entregaPedidoInternacional(pedido, saida_nacional, frete_local, transportadora_local_id, previsao_chegada, trans)
             } else if (pedido.origem_ressuprimento === 'Nacional') {
                 const { saida_nacional } = req.body
-                const pedidoAtualizado = await ressuprimentoServices.entregaPedidoNacional(pedido, saida_nacional, trans)
+                pedidoAtualizado = await ressuprimentoServices.entregaPedidoNacional(pedido, saida_nacional, trans)
             } else {
                 throw new Erro(400, 'Origem_Ressuprimento com problema de escrita')
             }
 
             await trans.commit()
-            return res.status(204).json({})
+            return res.status(200).json({
+                mensagem: `Pedido ${pedido.id} saiu para entrega ao depósito`
+            })
         } catch (erro) {
             if(trans) { 
                 await trans.rollback()
@@ -334,11 +352,23 @@ class RessuprimentoController {
             const pedidoAtualizado = await ressuprimentoServices.recebeProdutos(id, data_chegada, trans)
 
             await trans.commit()
-            return res.status(204).json({})
+            return res.status(200).json({
+                mensagem: `Pedido ${id} entregue no depósito`
+            })
         } catch (erro) {
             if(trans) { 
                 await trans.rollback()
             }
+            return res.status(erro.statusCode || 500).json({ error: erro.message } || 'Erro interno do servidor')
+        }
+    }
+
+    static async buscaPagamentoRessuprimento(req, res) {
+        const { id } = req.params
+        try {
+            const pagamento = await ressuprimentoServices.buscaPagamento(id)
+            return res.status(200).json(pagamento)
+        } catch (erro) {
             return res.status(erro.statusCode || 500).json({ error: erro.message } || 'Erro interno do servidor')
         }
     }

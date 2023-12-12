@@ -18,6 +18,8 @@ class PagamentoRessuprimentoServices extends Services {
         const diasVencimento = 3
         const dataVencimento = addBusinessDays(hoje, diasVencimento)
 
+
+
         const novoPagamento = await database[this.nomeDoModelo].create(
             {
                 pedido_ressuprimento_id: pPedidoRessuprimentoId,
@@ -30,8 +32,10 @@ class PagamentoRessuprimentoServices extends Services {
         return novoPagamento
     }
 
-    async realizaPagamentoRessuprimento(pPedidoRessuprimentoId, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao) {
+    async realizaPagamentoRessuprimento(pPedidoRessuprimentoId, pDataAceitacao, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao) {
         
+        let multaTotal = 0.0
+
         const pagamento = await database[this.nomeDoModelo].findOne({ where: { pedido_ressuprimento_id: pPedidoRessuprimentoId }})
         if(!pagamento) {
             throw new Erro(404, 'Registro de pagamento não encontrado')
@@ -41,8 +45,10 @@ class PagamentoRessuprimentoServices extends Services {
         if(!isValid(dataPagamento)) {
             throw new Erro(400, 'Data inválida de pagamento')
         }
-        
-        let multaTotal = 0.0
+
+        if(isBefore(dataPagamento, pDataAceitacao)){
+            throw new Erro(400, 'A data de pagamento não pode ser anterior a data de aceitação do pedido')
+        }
 
         const inicioDiaPagamento = startOfDay(dataPagamento)
         const inicioDiaVencimento = startOfDay(pagamento.data_vencimento)
@@ -52,7 +58,7 @@ class PagamentoRessuprimentoServices extends Services {
         }
 
         let dados = {
-            data_pagamento: pDataPagamento,
+            data_pagamento: dataPagamento,
             tipo_pagamento_ressuprimento: pTipoPagamentoRessuprimento,
             status_pagamento: 'Realizado'
         }
@@ -69,6 +75,14 @@ class PagamentoRessuprimentoServices extends Services {
             pagamentoRealizado: pagamentoRealizado,
             multaTotal: multaTotal
         }
+    }
+
+    async buscaPagamento(pPedidoRessuprimentoId) {
+        return await database[this.nomeDoModelo].findOne({
+            where: {
+                pedido_ressuprimento_id: pPedidoRessuprimentoId
+            }
+        })
     }
 
 }

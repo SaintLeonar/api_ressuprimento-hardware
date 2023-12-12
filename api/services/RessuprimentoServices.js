@@ -1,7 +1,7 @@
 const Services = require('./Services')
 const database = require('../models')
 const Erro = require('../errors/Erros')
-const { parse, isValid } = require('date-fns');
+const { parse, isValid, isBefore, startOfDay } = require('date-fns');
 const ProdutoServices = require('./ProdutoServices')
 const ItemPedidoFornecedorServices = require('./ItemPedidoFornecedorServices')
 const FornecedorServices = require('./FornecedorServices')
@@ -11,6 +11,7 @@ const TransportadoraInternacionalServices = require('./TransportadoraInternacion
 const TransportadoraLocalServices = require('./TransportadoraLocalServices')
 const AlfandegaInternacionalServices = require('./AlfandegaInternacionalServices')
 const AlfandegaNacionalServices = require('./AlfandegaNacionalServices')
+const NotaFiscalServices = require('./NotaFiscalServices')
 
 class RessuprimentoServices extends Services {
     constructor() {
@@ -24,6 +25,7 @@ class RessuprimentoServices extends Services {
         this.transportadoraLocal = new TransportadoraLocalServices()
         this.alfandegaInternacional = new AlfandegaInternacionalServices()
         this.alfandegaNacional = new AlfandegaNacionalServices()
+        this.notaFiscal = new NotaFiscalServices()
     }
 
     async criaNovoPedidoRessuprimento(pFornecedorId, pDepositoId, pProdutos, pTransacao) {
@@ -40,7 +42,7 @@ class RessuprimentoServices extends Services {
         // CRIA UM NOVO REGISTRO DE PEDIDO DE RESSUPRIMENTO
         const novoPedido = await database[this.nomeDoModelo].create(
             {
-                data_pedido: new Date(),
+                data_pedido: startOfDay(new Date()),
                 fornecedor_id: pFornecedorId,
                 deposito_id: pDepositoId
             },
@@ -91,12 +93,22 @@ class RessuprimentoServices extends Services {
             throw new Erro(400, 'O pedido de ressuprimento já encontra-se recusado')
         }
 
+        const timeZone = 'America/Sao_Paulo'
+
+        const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', { timeZone });
+
+        let dataHoje = dateTimeFormat.format(new Date());
+        dataHoje = parse(dataHoje, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataHoje)) {
+            throw new Erro(400, 'Erro no parse da data hoje')
+        }
+
         let dados = {}
 
         if(pAceito) {
             dados = {
                 aceito: pAceito,
-                data_aceitacao: new Date()
+                data_aceitacao: dataHoje
             }
         } else {
             dados = {
@@ -138,7 +150,16 @@ class RessuprimentoServices extends Services {
             throw new Erro(404, 'Pedido de Ressuprimento não foi aceito pelo fornecedor')
         }
 
-        const resultado = await this.pagamento.realizaPagamentoRessuprimento(pId, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao)
+        const dataPagamento = parse(pDataPagamento, 'dd/MM/yyyy', new Date())
+        if(!isValid(dataPagamento)) {
+            throw new Erro(400, 'Data inválida de pagamento')
+        }
+
+        if(isBefore(dataPagamento,pedido.data_pedido)) {
+            throw new Erro(400, 'Data de pagamento não pode ser anterior a data de criação do pedido')
+        }
+
+        const resultado = await this.pagamento.realizaPagamentoRessuprimento(pId, pedido.data_aceitacao, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao)
 
         let dados = {
             status_pedido_ressuprimento: 'Em preparação'
@@ -173,6 +194,15 @@ class RessuprimentoServices extends Services {
         const dataDespacho = parse(pDataDespacho, 'dd/MM/yyyy', new Date())
         if(!isValid(dataDespacho)) {
             throw new Erro(400, 'Data inválida de despacho')
+        }
+
+        const notaFiscal = await this.notaFiscal.buscaNotaFiscal(pedido.id)
+        if(!notaFiscal) {
+            throw new Erro(404, 'Nota Fiscal não encontrada para esse pedido')
+        }
+
+        if(isBefore(dataDespacho, notaFiscal.data_emissao)){
+            throw new Erro(400, 'Data de despacho não deve ser anterior a data de emissão da nota fiscal')
         }
 
         let previsaoChegada = null
@@ -240,6 +270,15 @@ class RessuprimentoServices extends Services {
             throw new Erro(400, 'Data inválida de despacho')
         }
 
+        const notaFiscal = await this.notaFiscal.buscaNotaFiscal(pedido.id)
+        if(!notaFiscal) {
+            throw new Erro(404, 'Nota Fiscal não encontrada para esse pedido')
+        }
+
+        if(isBefore(dataDespacho, notaFiscal.data_emissao)){
+            throw new Erro(400, 'Data de despacho não deve ser anterior a data de emissão da nota fiscal')
+        }
+
         const transportadoraLocal = await this.transportadoraLocal.buscaUmRegistro(pTransportadoraLocalId)
         if(!transportadoraLocal) {
             throw new Erro(404, 'Transportadora local não cadastrada na base de dados')
@@ -255,6 +294,9 @@ class RessuprimentoServices extends Services {
             previsaoChegada = parse(pPrevisaoChegada, 'dd/MM/yyyy', new Date())
             if(!isValid(previsaoChegada)) {
                 throw new Erro(400, 'Data inválida de previsão de chegada')
+            }
+            if(isBefore(previsaoChegada, dataDespacho)){
+                throw new Erro(400, 'Data de previsão de chegada não deve ser anterior a data de despacho')
             }
         }
         
@@ -300,6 +342,10 @@ class RessuprimentoServices extends Services {
                 throw new Erro(400, 'Status do pedido é diferente de: Despachado para alfandega internacional')
             }
 
+            if(isBefore(dataChegada, pPedido.data_despacho)) {
+                throw new Erro(400, 'Data de chegada na alfandega internacional não pode ser anterior a data de despacho')
+            }
+
             dados = {
                 chegada_alfandega_int: dataChegada,
                 status_pedido_ressuprimento: 'Chegada em alfandega internacional'
@@ -308,6 +354,10 @@ class RessuprimentoServices extends Services {
         } else if (pAlfandega === 'nacional') {
             if(pPedido.status_pedido_ressuprimento !== 'Liberado pela alfandega internacional') {
                 throw new Erro(400, 'Status do pedido é diferente de: Liberado pela alfandega internacional')
+            }
+
+            if(isBefore(dataChegada, pPedido.liberacao_alfandega_int)) {
+                throw new Erro(400, 'Data de chegada na alfandega nacional não pode ser anterior a data de liberação da alfandega internacional')
             }
 
             dados= {
@@ -344,6 +394,10 @@ class RessuprimentoServices extends Services {
                 throw new Erro(400, 'Data de liberacao por alfandega internacional inválida')
             }
 
+            if(isBefore(dataLiberacao, pPedido.chegada_alfandega_int)) {
+                throw new Erro(400, 'Data de liberação por alfandega internacional não pode ser anterior a data de chegada na alfandega internacional')
+            }
+
             const alfandegaNacional = await this.alfandegaNacional.buscaUmRegistro(pAlfandegaNacionalId)
             if(!alfandegaNacional) {
                 throw new Erro(404, 'Alfândega nacional não cadastrada na base de dados')
@@ -363,6 +417,10 @@ class RessuprimentoServices extends Services {
         } else {
             if(!isValid(dataLiberacao)) {
                 throw new Erro(400, 'Data de liberacao por alfandega nacional inválida')
+            }
+
+            if(isBefore(dataLiberacao, pPedido.chegada_alfandega_nac)) {
+                throw new Erro(400, 'Data de liberação por alfandega nacional não pode ser anterior a data de chegada na alfandega nacional')
             }
 
             dados = {
@@ -391,6 +449,10 @@ class RessuprimentoServices extends Services {
             throw new Erro(400, 'Data de saída inválida')
         }
 
+        if(isBefore(dataSaidaNacional, pPedido.liberacao_alfandega_nac)){
+            throw new Erro(400, 'Data de saida nacional não pode ser anterior a data de liberação da alfandega nacional')
+        }
+
         if(!pTransportadoraLocalId) {
             throw new Erro(400, 'Transportadora Local não preenchida')
         }
@@ -410,6 +472,9 @@ class RessuprimentoServices extends Services {
             previsaoChegada = parse(pPrevisaoChegada, 'dd/MM/yyyy', new Date())
             if(!isValid(previsaoChegada)) {
                 throw new Erro(400, 'Data inválida de previsão de chegada')
+            }
+            if(isBefore(previsaoChegada, dataSaidaNacional)) {
+                throw new Erro(400, 'Data de previsão de chegada não pode ser anterior a data de saída nacional')
             }
         }
 
@@ -443,6 +508,10 @@ class RessuprimentoServices extends Services {
             throw new Erro(400, 'Data de saída inválida')
         }
 
+        if(isBefore(dataSaidaNacional, pPedido.data_despacho)){
+            throw new Erro(400, 'Data de saída nacional não pode ser anterior a data de despacho nacional')
+        }
+
         let dados = {
             saida_nacional: dataSaidaNacional,
             status_pedido_ressuprimento: 'Em rota de entrega'
@@ -474,6 +543,10 @@ class RessuprimentoServices extends Services {
             throw new Erro(400, 'Data inválida de chegada')
         }
 
+        if(isBefore(dataChegada, pedido.saida_nacional)){
+            throw new Erro(400, 'Data de chegada não pode ser anterior a data de saída nacional')
+        }
+
         const produtosPedido = await this.itemPedidoFornecedor.buscaProdutosPedidoRessuprimento(pedido.id)
 
         for(const produtoPedido of produtosPedido) {
@@ -502,6 +575,10 @@ class RessuprimentoServices extends Services {
         )
 
         return pedidoAtualizado
+    }
+
+    async buscaPagamento (pId) {
+        return await this.pagamento.buscaPagamento(pId)
     }
 }
 

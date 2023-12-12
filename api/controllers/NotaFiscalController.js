@@ -1,7 +1,8 @@
 const Erro = require('../errors/Erros')
 const { sequelize } = require('../models')
-const { NotaFiscalServices } = require('../services')
+const { NotaFiscalServices, RessuprimentoServices } = require('../services')
 const notaFiscalServices = new NotaFiscalServices()
+const ressuprimentoServices = new RessuprimentoServices()
 
 class NotaFiscalController {
     
@@ -22,7 +23,14 @@ class NotaFiscalController {
 
             const { pedido_ressuprimento_id, data_emissao, data_recebimento } = req.body
 
-            const notaFiscal = await notaFiscalServices.emiteNotaFiscal(pedido_ressuprimento_id, data_emissao, data_recebimento, trans)
+            const pedido = await ressuprimentoServices.buscaUmRegistro(pedido_ressuprimento_id)
+            if(!pedido) {
+                throw new Erro(404, 'Pedido Ressuprimento não encontrado na base')
+            }
+
+            const produtos = await ressuprimentoServices.buscaProdutosPedido(pedido.id)
+
+            const notaFiscal = await notaFiscalServices.emiteNotaFiscal(pedido, produtos, data_emissao, data_recebimento, trans)
 
             await trans.commit()
             return res.status(201).json({

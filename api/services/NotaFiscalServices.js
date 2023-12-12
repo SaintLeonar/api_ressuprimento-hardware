@@ -1,35 +1,32 @@
 const Services = require('./Services')
 const database = require('../models')
 const Erro = require('../errors/Erros')
-const RessuprimentoServices = require('./RessuprimentoServices')
 const ItemNotaFiscalServices = require('./ItemNotaFiscalServices')
+const PagamentoRessuprimentoServices = require('./PagamentoRessuprimentoServices')
 const faker = require('faker')
-const { parse, isValid } = require('date-fns');
+const { parse, isValid, isBefore, isAfter } = require('date-fns');
 
 class NotaFiscalServices extends Services {
     constructor() {
         super('Nota_Fiscal')
-        this.pedidoRessuprimento = new RessuprimentoServices()
         this.itemNotaFiscal = new ItemNotaFiscalServices()
+        this.pagamento = new PagamentoRessuprimentoServices()
     }
 
-    async emiteNotaFiscal(pPedidoRessuprimentoId, pDataEmissao, pDataRecebimento, pTransacao) {
-        const pedido = await this.pedidoRessuprimento.buscaUmRegistro(pPedidoRessuprimentoId)
-        if(!pedido) {
-            throw new Erro(404, 'Pedido de Ressuprimento não encontrado na base')
-        }
+    async emiteNotaFiscal(pPedido, pProdutos, pDataEmissao, pDataRecebimento, pTransacao) {
 
-        // Esse caso não estava descrito
-        // Se o estado for 'Em preparação' significa que o pedido foi pago
-        // Então decidi não validar se existe um pagamento para esse pedido
-        if(pedido.status_pedido_ressuprimento !== 'Em preparação') {
+        if(pPedido.status_pedido_ressuprimento !== 'Em preparação') {
             throw new Erro(400, 'Status do pedido é diferente de: Em preparação')
         }
 
-        // Esse caso não estava descrito
+        const pagamento = await this.pagamento.buscaPagamento(pPedido.id)
+        if(!pagamento) {
+            throw new Erro(404, 'Pagamento não identificado para esse pagamento')
+        }
+
         const notaFiscal = await database[this.nomeDoModelo].findOne({
             where: {
-                pedido_ressuprimento_id: Number(pedido.id)
+                pedido_ressuprimento_id: Number(pPedido.id)
             }
         })
         if(notaFiscal) {
@@ -46,6 +43,14 @@ class NotaFiscalServices extends Services {
             throw new Erro(400, 'Data inválida de recebimento')
         }
 
+        if(isBefore(dataEmissao,pagamento.data_pagamento)){
+            throw new Erro(400, 'Data de emissão não pode ser anterior a data de pagamento do ressuprimento')
+        }
+
+        if(!isAfter(dataRecebimento, dataEmissao)) {
+            throw new Erro(400, 'Data de recebimento deve ser superior a data de emissão')
+        }
+
         // Gera um identificar NF-e ficticio para fins de testes
         const NFe_Ficticio = faker.datatype.uuid()
 
@@ -55,17 +60,23 @@ class NotaFiscalServices extends Services {
                 identificador: NFe_Ficticio,
                 data_emissao: dataEmissao,
                 data_recebimento: dataRecebimento,
-                pedido_ressuprimento_id: pPedidoRessuprimentoId
+                pedido_ressuprimento_id: pPedido.id
             },
             { transaction: pTransacao }
         )
 
-        const produtos =  await this.pedidoRessuprimento.buscaProdutosPedido(pPedidoRessuprimentoId)
-
         // CRIA ITEM NOTA FISCAL
-        await this.itemNotaFiscal.criaItemNotaFiscal(novaNotaFiscal.id, produtos, pTransacao)
+        await this.itemNotaFiscal.criaItemNotaFiscal(novaNotaFiscal.id, pProdutos, pTransacao)
 
         return novaNotaFiscal
+    }
+
+    async buscaNotaFiscal(pPedidoRessuprimentoId) {
+        return await database[this.nomeDoModelo].findOne({
+            where: {
+                pedido_ressuprimento_id: pPedidoRessuprimentoId
+            }
+        })
     }
 }
 
