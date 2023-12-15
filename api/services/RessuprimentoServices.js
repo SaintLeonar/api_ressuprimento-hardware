@@ -155,8 +155,8 @@ class RessuprimentoServices extends Services {
             throw new Erro(400, 'Data inválida de pagamento')
         }
 
-        if(isBefore(dataPagamento,pedido.data_pedido)) {
-            throw new Erro(400, 'Data de pagamento não pode ser anterior a data de criação do pedido')
+        if(isBefore(dataPagamento,pedido.data_aceitacao)) {
+            throw new Erro(400, 'Data de pagamento não pode ser anterior a data de aceitação do pedido')
         }
 
         const resultado = await this.pagamento.realizaPagamentoRessuprimento(pId, pedido.data_aceitacao, pDataPagamento, pTipoPagamentoRessuprimento, pTransacao)
