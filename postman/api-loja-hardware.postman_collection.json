@@ -1,0 +1,524 @@
+{
+	"info": {
+		"_postman_id": "cd348a23-e232-41ae-9cf2-0127904b4b2f",
+		"name": "api-loja-hardware",
+		"description": "endpoints dos casos de uso implementados para o projeto de sistema",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7062475"
+	},
+	"item": [
+		{
+			"name": "Obter um Fornecedor",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/fornecedores/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"fornecedores",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obter um Deposito",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/depositos/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"depositos",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obter um Pedido",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Pagamento do Pedido",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/pagamento/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"pagamento",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obter um Produto por EAN",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/produtos/ean/8888999910101",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"produtos",
+						"ean",
+						"8888999910101"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obter um Produto por ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/produtos/2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"produtos",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Pedido Ressuprimento",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"fornecedorId\": 1, // Deve constar da base\n  \"depositoId\": 1, // Deve constar na base\n  \"produtos\": [\n    {\n      \"ean\": \"8888999910101\", // Deve constar na base\n      \"quantidade_pedida\": 50, // Deve ser positivo\n      \"preco_acordado\": 200.00 // Deve ser positivo\n    },\n    {\n      \"ean\": \"1111222233334\",\n      \"quantidade_pedida\": 30,\n      \"preco_acordado\": 666.00\n    }\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Aceitação Pedido Ressuprimento",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"aceito\": true // Deve receber valores true | false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/aceitar/4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"aceitar",
+						"4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Pagamento Pedido Ressuprimento",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"data_pagamento\": \"30/12/2023\", // Não pode ser anterior a data de aceitação do pedido\n    \"tipo_pagamento_ressuprimento\": \"Transferência Bancária\" // Deve fazer parte do domínio ENUM\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/pagamento/4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"pagamento",
+						"4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Emite Nota Fiscal",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"pedido_ressuprimento_id\": 3, // Deve constar na base\n    \"data_emissao\": \"14/12/2023\", // Não pode ser anterior a data de pagamento\n    \"data_recebimento\": \"15/12/2023\" // Deve ser posterior a data de emissão\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/nota_fiscal",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"nota_fiscal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Despacho Internacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"data_despacho\": \"15/12/2023\", // Não pode ser anterior a data de emissão da nota fiscal\n    \"alfandega_internacional_id\": 2, // Deve constar na base\n    \"transportadora_internacional_id\": 2, // Deve constar na base e entregar na alfandega internacional\n    \"frete_internacional\": 10.55 // Deve ser um número positivo\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/despacho/internacional/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"despacho",
+						"internacional",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Despacho Nacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"data_despacho\": \"14/12/2023\", // Não pode ser anterior a data emissão da nota fiscal\n    \"transportadora_local_id\": 1, // Deve constar na base\n    \"frete_local\": 12.56, // Deve ser um número positivo\n    \"previsao_chegada\": \"30/12/2023\" // Não pode ser anterior a data de despacho\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/despacho/nacional/2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"despacho",
+						"nacional",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Chegada Alfandega Internacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"chegada_alfandega_internacional\": \"16/12/2023\" // Não pode ser anterior a data de despacho\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/chegada_alfandega/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"chegada_alfandega",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Liberação Alfandega Internacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"liberacao_alfandega_internacional\": \"17/12/2023\", // Não pode ser anterior a data de chegada na alfandega internacional\n    \"alfandega_nacional_id\": 1 // Deve constar na base\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/liberacao_alfandega/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"liberacao_alfandega",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Chegada Alfandega Nacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"chegada_alfandega_nacional\": \"18/12/2023\" // Não pode ser anterior a data de liberação da alfandega internacional\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/chegada_alfandega/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"chegada_alfandega",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Liberação alfandega Nacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"liberacao_alfandega_nacional\": \"18/12/2023\" // Não pode ser anterior a data de chegada na alfandega nacional\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/liberacao_alfandega/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"liberacao_alfandega",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Entrega Pedido Internacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"saida_nacional\": \"18/12/2023\", // Não pode ser anterior a data de liberação da alfandega nacional\n    \"frete_local\": 9.99, // Deve ser um valor positivo\n    \"transportadora_local_id\": 1, // Deve constar na base\n    \"previsao_entrega\": \"30/12/2023\" // Se preenchido, não deve ser anterior a data de saída nacional\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/entrega/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"entrega",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Entrega Pedido Nacional",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"saida_nacional\": \"16/12/2023\" // Não pode ser anterior a data de despacho\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/entrega/2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"entrega",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Recebimento Produtos",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"data_chegada\": \"30/12/2023\" // Não pode ser anterior a data de saida nacional\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/pedido_ressuprimento/recebimento/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"pedido_ressuprimento",
+						"recebimento",
+						"3"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
