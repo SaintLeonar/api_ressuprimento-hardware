@@ -112,7 +112,8 @@ class RessuprimentoServices extends Services {
             }
         } else {
             dados = {
-                aceito: pAceito
+                aceito: pAceito,
+                status_pedido_ressuprimento: 'Não aceito'
             }
         }
 
